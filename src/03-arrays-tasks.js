@@ -509,8 +509,15 @@ function distinct(arr) {
  *    "Poland" => ["Lodz"]
  *   }
  */
-function group(/* array, keySelector, valueSelector */) {
-  throw new Error('Not implemented');
+function group(array, keySelector, valueSelector) {
+  return new Map(Object.entries(array.reduce((acc, e) => {
+    if (keySelector(e) in acc) {
+      acc[keySelector(e)].push(valueSelector(e));
+    } else {
+      acc[keySelector(e)] = [valueSelector(e)];
+    }
+    return acc;
+  }, {})));
 }
 
 
