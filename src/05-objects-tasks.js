@@ -115,33 +115,87 @@ function fromJSON(proto, json) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  str: '',
+
+  errorRepeat() {
+    throw new Error(
+      'Element, id and pseudo-element should not occur more then one time inside the selector',
+    );
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  errorOrder() {
+    throw new Error(
+      'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+    );
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  stringify() {
+    return this.str;
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    if (this.isId) this.errorOrder();
+    if (this.isElement) this.errorRepeat();
+    return {
+      ...this,
+      str: `${this.str}${value}`,
+      isElement: true,
+    };
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    if (this.isId) this.errorRepeat();
+    if (this.isClass || this.isPseudoClass || this.isPseudoElement) this.errorOrder();
+    return {
+      ...this,
+      str: `${this.str}#${value}`,
+      isId: true,
+    };
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    if (this.isAttr || this.isPseudoClass) this.errorOrder();
+    return {
+      ...this,
+      str: `${this.str}.${value}`,
+      isClass: true,
+    };
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    if (this.isPseudoClass) this.errorOrder();
+    return {
+      ...this,
+      str: `${this.str}[${value}]`,
+      isAttr: true,
+    };
   },
+
+  pseudoClass(value) {
+    if (this.isPseudoElement) this.errorOrder();
+    return {
+      ...this,
+      str: `${this.str}:${value}`,
+      isPseudoClass: true,
+    };
+  },
+
+  pseudoElement(value) {
+    if (this.isPseudoElement) this.errorRepeat();
+    return {
+      ...this,
+      str: `${this.str}::${value}`,
+      isPseudoElement: true,
+    };
+  },
+
+  combine(selector1, combinator, selector2) {
+    return {
+      ...this,
+      str: `${selector1.stringify()} ${combinator} ${selector2.stringify()}`,
+    };
+  },
+
 };
 
 
